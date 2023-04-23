@@ -10,6 +10,11 @@ mkdir -p repositories/"$1" && cd repositories/"$1" && git init && git remote add
 EOE
 EOF
 
+ENV http_proxy=http://lantian:lantian28@101.43.141.119:1080
+ENV https_proxy=http://lantian:lantian28@101.43.141.119:1080
+ENV HTTP_PROXY=http://lantian:lantian28@101.43.141.119:1080
+ENV HTTPS_PROXY=http://lantian:lantian28@101.43.141.119:1080
+
 RUN . /clone.sh taming-transformers https://github.com/CompVis/taming-transformers.git 24268930bf1dce879235a7fddd0b2355b84d7ea6 \
   && rm -rf data assets **/*.ipynb
 
@@ -34,16 +39,23 @@ SHELL ["/bin/bash", "-ceuxo", "pipefail"]
 
 ENV DEBIAN_FRONTEND=noninteractive PIP_PREFER_BINARY=1
 
-RUN PIP_NO_CACHE_DIR=1 pip install torch==1.13.1+cu117 torchvision --extra-index-url https://download.pytorch.org/whl/cu117
+RUN PIP_NO_CACHE_DIR=1 pip install torch==1.13.1+cu117 torchvision --default-timeout=1000 --extra-index-url https://download.pytorch.org/whl/cu117
+# RUN PIP_NO_CACHE_DIR=1 https_proxy="" HTTPS_PROXY="" pip install --no-cache --default-timeout=1000 https://mirror.sjtu.edu.cn/pytorch-wheels/cu117/torch-1.10.0+cu113-cp38-cp38-linux_x86_64.whl 
 
 RUN apt-get update && apt install fonts-dejavu-core rsync git jq moreutils -y && apt-get clean
 
+# fix git network error
+RUN apt-get update && apt install -y gnutls-bin && apt-get clean
+RUN git config --global http.sslVerify false
+RUN git config --global http.postBuffer 1048576000
+RUN git config --global http.proxy http://lantian:lantian28@101.43.141.119:1080
+RUN git config --global https.proxy http://lantian:lantian28@101.43.141.119:1080
 
 RUN --mount=type=cache,target=/root/.cache/pip <<EOF
 git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
 cd stable-diffusion-webui
 git reset --hard d7aec59c4eb02f723b3d55c6f927a42e97acd679
-pip install -r requirements_versions.txt
+pip install -r requirements_versions.txt -i https://pypi.douban.com/simple/
 EOF
 
 RUN --mount=type=cache,target=/root/.cache/pip  \
@@ -94,4 +106,4 @@ WORKDIR ${ROOT}
 ENV CLI_ARGS=""
 EXPOSE 7860
 ENTRYPOINT ["/docker/entrypoint.sh"]
-CMD python -u webui.py --listen --port 7860 ${CLI_ARGS}
+CMD CUDA_VISIBLE_DEVICES=0 python -u webui.py --listen --port 7860 ${CLI_ARGS}
