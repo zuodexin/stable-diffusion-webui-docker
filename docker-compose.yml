@@ -7,7 +7,6 @@ x-base_service:
   volumes:
     - &v1 ./data:/data
     - &v2 ./output:/output
-    - &v3 ./extensions:/extensions
   stop_signal: SIGINT
   deploy:
     resources:
@@ -30,7 +29,7 @@ services:
     <<: *base_service
     profiles: [ "auto" ]
     build: ./services/AUTOMATIC1111
-    image: sd-auto:49
+    image: sd-auto:51
     environment:
       - CLI_ARGS=--allow-code --medvram --xformers --enable-insecure-extension-access --api
 
@@ -45,10 +44,10 @@ services:
     <<: *base_service
     profiles: [ "invoke" ]
     build: ./services/invoke/
-    image: sd-invoke:26
+    image: sd-invoke:27
     environment:
       - PRELOAD=true
-      - CLI_ARGS=
+      - CLI_ARGS=--no-nsfw_checker --no-safety_checker --xformers
 
   sygil:
     &sygil
@@ -65,3 +64,19 @@ services:
     profiles: [ "sygil-sl" ]
     environment:
       - USE_STREAMLIT=1
+
+  comfy:
+    &comfy
+    <<: *base_service
+    profiles: [ "comfy" ]
+    build: ./services/comfy/
+    image: sd-comfy:1
+    environment:
+      - CLI_ARGS=
+
+  comfy-cpu:
+    <<: *comfy
+    profiles: [ "comfy-cpu" ]
+    deploy: {}
+    environment:
+      - CLI_ARGS=--cpu
