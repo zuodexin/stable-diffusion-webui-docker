@@ -7,7 +7,7 @@ mkdir -vp /data/.cache /data/StableDiffusion /data/Codeformer /data/GFPGAN /data
 
 echo "Downloading, this might take a while..."
 
-aria2c -x 10 --disable-ipv6 --input-file /docker/links.txt --dir /data --continue
+aria2c --all-proxy="http://lantian:lantian28@101.43.141.119:1080" -x 10 --disable-ipv6 --input-file /docker/links.txt --dir /data --continue
 
 echo "Checking SHAs..."
 

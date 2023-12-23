@@ -27,6 +27,9 @@ services:
   auto:
     &automatic
     <<: *base_service
+    volumes:
+      - *v1
+      - *v2
     profiles: [ "auto" ]
     build: ./services/AUTOMATIC1111
     image: sd-auto:51

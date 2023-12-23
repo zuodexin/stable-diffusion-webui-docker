@@ -29,8 +29,16 @@ FROM python:3.10.9-slim
 
 ENV DEBIAN_FRONTEND=noninteractive PIP_PREFER_BINARY=1
 
-RUN --mount=type=cache,target=/root/.cache/pip \
-  pip install torch==1.13.1+cu117 torchvision --default-timeout=1000 --extra-index-url https://download.pytorch.org/whl/cu117
+ENV http_proxy=http://lantian:lantian28@101.43.141.119:1080
+ENV https_proxy=http://lantian:lantian28@101.43.141.119:1080
+ENV HTTP_PROXY=http://lantian:lantian28@101.43.141.119:1080
+ENV HTTPS_PROXY=http://lantian:lantian28@101.43.141.119:1080
+
+RUN --mount=type=cache,target=/root/.cache/pip https_proxy="" HTTPS_PROXY="" pip install --default-timeout=1000 https://mirror.sjtu.edu.cn/pytorch-wheels/cu117/torch-1.13.1+cu117-cp310-cp310-linux_x86_64.whl
+RUN --mount=type=cache,target=/root/.cache/pip https_proxy="" HTTPS_PROXY="" pip install --default-timeout=1000 https://mirror.sjtu.edu.cn/pytorch-wheels/cu117/torchvision-0.14.1+cu117-cp310-cp310-linux_x86_64.whl
+
+# RUN --mount=type=cache,target=/root/.cache/pip \
+#   pip install torch==1.13.1+cu117 torchvision --default-timeout=1000 --extra-index-url https://download.pytorch.org/whl/cu117
 
 RUN apt-get update && apt install fonts-dejavu-core rsync git jq moreutils -y && apt-get clean
 
@@ -95,4 +103,4 @@ ENV NVIDIA_VISIBLE_DEVICES=all
 ENV CLI_ARGS=""
 EXPOSE 7860
 ENTRYPOINT ["/docker/entrypoint.sh"]
-CMD CUDA_VISIBLE_DEVICES=0 python -u webui.py --listen --port 7860 ${CLI_ARGS}
+CMD CUDA_VISIBLE_DEVICES=0 python -u webui.py --listen --port 7860 ${CLI_ARGS} --share
